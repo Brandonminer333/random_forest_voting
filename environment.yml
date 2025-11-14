@@ -1,0 +1,8 @@
+name: rf_voting
+dependencies:
+  - python=3.13
+  - pip
+  - ipykernel
+  - numpy
+  - pandas
+  - scikit-learn

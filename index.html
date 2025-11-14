@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Blog exploring the application of Bayesian Regression" />
+    <title>Bayesian Regression Blog</title>
+
+    <!-- rectangle box that looks cool -->
+    <style>
+        :root { --max-width: 900px; --gap: 1rem; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+        html,body { height:100%; margin:0; }
+        body { display:flex; align-items:flex-start; justify-content:center; padding:2rem; background:#f7f7f7; color:#111; }
+        .wrap { width:100%; max-width:var(--max-width); background:#fff; padding:1.5rem; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.06); }
+        header, main, footer { display:block; margin-bottom:var(--gap); }
+        nav a { margin-right:0.75rem; text-decoration:none; color:inherit; opacity:.8; }
+        h1 { margin:0 0 .25rem 0; font-size:1.5rem; }
+        p { margin:.25rem 0; line-height:1.5; }
+    </style>
+    <!-- Import LaTeX -->
+    <script>
+        MathJax = {
+            tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
+            svg: {fontCache: 'global'}
+        };
+        </script>
+        <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+      /* Indent first line of paragraphs */
+      p {
+          text-indent: 3em; 
+      }
+      /* Center tables */
+      .centered-table {
+          margin-left: auto;
+          margin-right: auto;
+          border-collapse: collapse;
+          width: 80%;
+      }
+      /* Add borders to table */
+      table, th, td {
+        border: 1px solid black;
+      }
+    </style>
+</head>
+<body>
+  <div class="wrap" role="document">
+    <header>
+      <h1>An Exploration into Bayesian Regression</h1>
+      <p class="tagline"></p>
+      <nav aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="https://github.com/Brandonminer333/rf_voting">Github</a>
+      </nav>
+    </header>
+    <main role="main">
+      <h1>A Case Study on the Impacts of Random Forest Prediction Aggregation</h1>
+
+      <h3>Brandon Miner</h3>
+
+      <h2>Introduction</h2>
+
+      <p>
+        This discussion focuses on the machine-learning model known as a 
+        <strong>Random Forest</strong>, an ensemble technique built from many 
+        <strong>decision trees</strong>. A decision tree is a model that recursively 
+        splits the data using a greedy algorithm to form increasingly homogeneous 
+        subsets. While decision trees are intuitive and powerful, they tend to 
+        <strong>overfit</strong>—they perfectly memorize the training data but 
+        generalize poorly.
+      </p>
+
+      <p>
+        Random Forests address this weakness through <strong>ensembling</strong>: 
+        they build many decorrelated, shallowly constrained trees (via feature 
+        subsampling, bootstrapping, and depth/leaf restrictions). Each individual 
+        tree may still overfit, but <strong>aggregating</strong> their predictions 
+        reduces variance and improves stability—essentially “averaging away” the 
+        overfitting.
+      </p>
+
+      <p>
+        But that raises the central question of this post:
+      </p>
+
+      <blockquote>
+        <strong>How exactly are the predictions from individual trees combined?</strong>
+      </blockquote>
+
+      <p>
+        In common libraries such as <code>scikit-learn</code>, each tree in a 
+        classification forest returns the <strong>class probabilities</strong> from 
+        its leaf node. Each tree votes for the class with the highest probability, 
+        and the forest predicts the class that receives the most votes.
+      </p>
+
+      <p>
+        But are other voting methods possible? And do they matter?
+      </p>
+
+      <h2>Voting Methods</h2>
+
+      <p>I explored three voting approaches:</p>
+
+      <ol>
+        <li><strong>Majority Voting</strong></li>
+        <li><strong>Weighted Voting</strong></li>
+        <li><strong>Ranked Voting</strong> (inspired by real-world voting systems)</li>
+      </ol>
+
+      <h3>1. Majority Voting</h3>
+
+      <p>
+        This is the most familiar aggregation method. Each tree predicts a class; the 
+        forest outputs the <strong>mode</strong> of these predictions.
+      </p>
+
+      <p>
+        It is simple, fast, and fully parallelizable. However, it ignores the 
+        <strong>confidence</strong> of each prediction. Two trees with weak evidence 
+        count just as much as one tree with very strong evidence.
+      </p>
+
+      <h3>2. Weighted Voting</h3>
+
+      <p>Consider three trees and two classes, (A) and (B):</p>
+
+      <ul>
+        <li>Tree 1: Leaf contains 4 samples → 3 are class (A)</li>
+        <li>Tree 2: Leaf contains 4 samples → 3 are class (A)</li>
+        <li>Tree 3: Leaf contains 10 samples → all 10 are class (B)</li>
+      </ul>
+
+      <p>
+        Majority voting elects class <strong>A</strong>, because two trees predict 
+        (A). But weighted voting notes that Tree 3 has a stronger signal—its leaf has 
+        more samples, and those samples unanimously support (B).
+      </p>
+
+      <p>
+        In weighted voting, each tree’s vote is weighted by the 
+        <strong>class probability</strong> (or equivalently, the proportion of 
+        samples in the leaf). Predictions with higher confidence influence the final 
+        output more.
+      </p>
+
+      <p>
+        This method better captures the actual distribution of the training data 
+        within each leaf, making it conceptually closer to probability aggregation.
+      </p>
+
+      <h3>3. Ranked Voting</h3>
+
+      <p>
+        This custom method becomes interesting with <strong>three or more 
+        classes</strong>.
+      </p>
+
+      <p>Example: classes (A), (B), and (C); 100 total trees:</p>
+
+      <ul>
+        <li>45 trees → (A)</li>
+        <li>35 trees → (B)</li>
+        <li>20 trees → (C)</li>
+      </ul>
+
+      <p>
+        The 20 votes for (C) are nowhere close to winning, but they contain 
+        information. In ranked voting, we look at the <strong>second-choice 
+        class</strong> for each tree predicting (C). If they overwhelmingly favor 
+        (B), then (B) may actually be preferred in a two-class comparison.
+      </p>
+
+      <p>
+        For more than three classes, the process repeats: we eliminate the least 
+        popular class and redistribute its votes according to the next-ranked option 
+        until only two classes remain.
+      </p>
+
+      <p>
+        It’s analogous to <strong>instant-runoff voting</strong> in political 
+        elections.
+      </p>
+
+      <h2>Findings</h2>
+
+      <p>
+        Surprisingly, in most experiments the three methods produced 
+        <strong>nearly identical accuracy</strong>, often matching to 
+        <strong>three decimal places</strong>. Changing sample size did not 
+        meaningfully affect this similarity.
+      </p>
+
+      <p>
+        However, when I adjusted parameters like <code>min_samples_leaf</code> and 
+        <code>max_depth</code>, differences began to emerge. Under these conditions, 
+        <strong>weighted voting consistently outperformed</strong> majority and 
+        ranked voting. Both majority voting and ranked voting declined in similar 
+        ways as the trees became more restricted.
+      </p>
+
+      <p>
+        This result helps explain why 
+        <strong>scikit-learn’s RandomForestClassifier uses weighted aggregation 
+        internally</strong>: it tends to be the most statistically reliable method, 
+        especially when tree structures are constrained.
+      </p>
+
+      <h2>Regression</h2>
+
+      <p>
+        Random Forest <strong>regression</strong> is different. Each leaf node 
+        returns the <strong>mean</strong> of the target values in that leaf. The 
+        forest prediction is simply the <strong>mean of the tree means</strong>.
+      </p>
+
+      <p>
+        Because the mean is a linear operator, any alternative aggregation (e.g., 
+        weighted mean, median, majority rule) is either:
+      </p>
+
+      <ul>
+        <li><strong>mathematically equivalent</strong> under standard assumptions, or</li>
+        <li><strong>statistically inferior</strong> (e.g., more biased or higher variance)</li>
+      </ul>
+
+      <p>
+        Thus, unlike classification, regression does not benefit from alternative 
+        aggregation strategies.
+      </p>
+    </main>
+
+    <footer>
+      <small><span id="year"></span> Linear Regression</small>
+    </footer>
+  </div>
+
+  <!-- Add current year -->
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
