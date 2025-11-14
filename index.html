@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content="Blog exploring the application of Bayesian Regression" />
-    <title>Bayesian Regression Blog</title>
+    <meta name="description" content="Blog exploring various random forest prediction aggregations" />
+    <title>Random Forest Voting Blog</title>
 
     <!-- rectangle box that looks cool -->
     <style>
@@ -48,7 +48,7 @@
 <body>
   <div class="wrap" role="document">
     <header>
-      <h1>An Exploration into Bayesian Regression</h1>
+      <h1>An Random Forest Voting Methods</h1>
       <p class="tagline"></p>
       <nav aria-label="Main navigation">
         <a href="/">Home</a>
@@ -56,181 +56,170 @@
       </nav>
     </header>
     <main role="main">
-      <h1>A Case Study on the Impacts of Random Forest Prediction Aggregation</h1>
 
-      <h3>Brandon Miner</h3>
+    <h1><strong>A Case Study on the Impacts of Random Forest Prediction Aggregation</strong></h1>
 
-      <h2>Introduction</h2>
+    <h3><strong>Brandon Miner</strong></h3>
 
-      <p>
-        This discussion focuses on the machine-learning model known as a 
-        <strong>Random Forest</strong>, an ensemble technique built from many 
-        <strong>decision trees</strong>. A decision tree is a model that recursively 
-        splits the data using a greedy algorithm to form increasingly homogeneous 
-        subsets. While decision trees are intuitive and powerful, they tend to 
-        <strong>overfit</strong>—they perfectly memorize the training data but 
-        generalize poorly.
-      </p>
+    <h2><strong>Introduction</strong></h2>
 
-      <p>
-        Random Forests address this weakness through <strong>ensembling</strong>: 
-        they build many decorrelated, shallowly constrained trees (via feature 
-        subsampling, bootstrapping, and depth/leaf restrictions). Each individual 
-        tree may still overfit, but <strong>aggregating</strong> their predictions 
-        reduces variance and improves stability—essentially “averaging away” the 
-        overfitting.
-      </p>
+    <p>
+    This discussion focuses on the machine-learning model known as a <strong>Random Forest</strong>, 
+    an ensemble technique built from many <strong>decision trees</strong>. A decision tree is a model 
+    that recursively splits the data using a greedy algorithm to form increasingly homogeneous subsets. 
+    While decision trees are intuitive and powerful, they tend to <strong>overfit</strong>. This means 
+    that they generalize poorly.
+    </p>
 
-      <p>
-        But that raises the central question of this post:
-      </p>
+    <p>
+    Random Forests address this weakness through <strong>ensembling</strong>: they build many 
+    decorrelated, shallowly constrained trees (via feature subsampling, bootstrapping, and 
+    depth/leaf restrictions). Each individual tree may still overfit, but <strong>aggregating</strong> 
+    their predictions reduces variance and improves stability. You can think of it as essentially 
+    “averaging away” the overfitting.
+    </p>
 
-      <blockquote>
-        <strong>How exactly are the predictions from individual trees combined?</strong>
-      </blockquote>
+    <p>
+    But that raises the central question of this post:
+    </p>
 
-      <p>
-        In common libraries such as <code>scikit-learn</code>, each tree in a 
-        classification forest returns the <strong>class probabilities</strong> from 
-        its leaf node. Each tree votes for the class with the highest probability, 
-        and the forest predicts the class that receives the most votes.
-      </p>
+    <blockquote>
+    <p><strong>How exactly are the predictions from individual trees combined?</strong></p>
+    </blockquote>
 
-      <p>
-        But are other voting methods possible? And do they matter?
-      </p>
+    <p>
+    In common libraries such as <code>scikit-learn</code>, each tree in a classification forest returns 
+    the <strong>class probabilities</strong> from its leaf node. Each tree votes for the class with the 
+    highest probability, and the forest predicts the class that receives the most votes.
+    </p>
 
-      <h2>Voting Methods</h2>
+    <p>
+    But are other voting methods possible? And do they matter?
+    </p>
 
-      <p>I explored three voting approaches:</p>
+    <h2><strong>Voting Methods</strong></h2>
 
-      <ol>
-        <li><strong>Majority Voting</strong></li>
-        <li><strong>Weighted Voting</strong></li>
-        <li><strong>Ranked Voting</strong> (inspired by real-world voting systems)</li>
-      </ol>
+    <p>I explored three voting approaches:</p>
 
-      <h3>1. Majority Voting</h3>
+    <ol>
+      <li><strong>Majority Voting</strong></li>
+      <li><strong>Weighted Voting</strong></li>
+      <li><strong>Ranked Voting</strong> (inspired by real-world voting systems)</li>
+    </ol>
 
-      <p>
-        This is the most familiar aggregation method. Each tree predicts a class; the 
-        forest outputs the <strong>mode</strong> of these predictions.
-      </p>
+    <h3><strong>1. Majority Voting</strong></h3>
 
-      <p>
-        It is simple, fast, and fully parallelizable. However, it ignores the 
-        <strong>confidence</strong> of each prediction. Two trees with weak evidence 
-        count just as much as one tree with very strong evidence.
-      </p>
+    <p>
+    This is the most familiar aggregation method. Each tree predicts a class; the forest outputs the 
+    <strong>mode</strong> of these predictions.
+    </p>
 
-      <h3>2. Weighted Voting</h3>
+    <p>
+    It is simple, fast, and fully parallelizable. However, it ignores the <strong>confidence</strong> 
+    of each prediction. Two trees with weak evidence count just as much as one tree with very strong 
+    evidence.
+    </p>
 
-      <p>Consider three trees and two classes, (A) and (B):</p>
+    <h3><strong>2. Weighted Voting</strong></h3>
 
-      <ul>
-        <li>Tree 1: Leaf contains 4 samples → 3 are class (A)</li>
-        <li>Tree 2: Leaf contains 4 samples → 3 are class (A)</li>
-        <li>Tree 3: Leaf contains 10 samples → all 10 are class (B)</li>
-      </ul>
+    <p>Consider three trees and two classes, (A) and (B).</p>
 
-      <p>
-        Majority voting elects class <strong>A</strong>, because two trees predict 
-        (A). But weighted voting notes that Tree 3 has a stronger signal—its leaf has 
-        more samples, and those samples unanimously support (B).
-      </p>
+    <ul>
+      <li>Tree 1: Leaf contains 4 samples → 3 are class (A)</li>
+      <li>Tree 2: Leaf contains 4 samples → 3 are class (A)</li>
+      <li>Tree 3: Leaf contains 10 samples → all 10 are class (B)</li>
+    </ul>
 
-      <p>
-        In weighted voting, each tree’s vote is weighted by the 
-        <strong>class probability</strong> (or equivalently, the proportion of 
-        samples in the leaf). Predictions with higher confidence influence the final 
-        output more.
-      </p>
+    <p>
+    Majority voting elects class <strong>A</strong>, because two trees predict (A). But weighted 
+    voting notes that Tree 3 has a stronger signal—its leaf has more samples, and those samples 
+    unanimously support (B).
+    </p>
 
-      <p>
-        This method better captures the actual distribution of the training data 
-        within each leaf, making it conceptually closer to probability aggregation.
-      </p>
+    <p>
+    In weighted voting, each tree's vote is weighted by the <strong>class probability</strong> 
+    (or the proportion of samples in the leaf). Predictions with higher confidence influence the 
+    final output more.
+    </p>
 
-      <h3>3. Ranked Voting</h3>
+    <p>
+    This method better captures the actual distribution of the training data within each leaf, 
+    making it conceptually closer to probability aggregation.
+    </p>
 
-      <p>
-        This custom method becomes interesting with <strong>three or more 
-        classes</strong>.
-      </p>
+    <h3><strong>3. Ranked Voting</strong></h3>
 
-      <p>Example: classes (A), (B), and (C); 100 total trees:</p>
+    <p>
+    This custom method becomes interesting with <strong>three or more classes</strong>.
+    </p>
 
-      <ul>
-        <li>45 trees → (A)</li>
-        <li>35 trees → (B)</li>
-        <li>20 trees → (C)</li>
-      </ul>
+    <p>Example: classes (A), (B), and (C); 100 total trees:</p>
 
-      <p>
-        The 20 votes for (C) are nowhere close to winning, but they contain 
-        information. In ranked voting, we look at the <strong>second-choice 
-        class</strong> for each tree predicting (C). If they overwhelmingly favor 
-        (B), then (B) may actually be preferred in a two-class comparison.
-      </p>
+    <ul>
+      <li>45 trees → (A)</li>
+      <li>35 trees → (B)</li>
+      <li>20 trees → (C)</li>
+    </ul>
 
-      <p>
-        For more than three classes, the process repeats: we eliminate the least 
-        popular class and redistribute its votes according to the next-ranked option 
-        until only two classes remain.
-      </p>
+    <p>
+    The 20 votes for (C) are nowhere close to winning, but they contain information. In ranked voting, 
+    we look at the <strong>second-choice class</strong> for each tree predicting (C). If they 
+    overwhelmingly favor (B), then (B) may actually be preferred in a two-class comparison.
+    </p>
 
-      <p>
-        It’s analogous to <strong>instant-runoff voting</strong> in political 
-        elections.
-      </p>
+    <p>
+    For more than three classes, the process repeats: we eliminate the least popular class and 
+    redistribute its votes according to the next-ranked option until only two classes remain.
+    </p>
 
-      <h2>Findings</h2>
+    <p>
+    It's analogous to <strong>instant-runoff voting</strong> in political elections.
+    </p>
 
-      <p>
-        Surprisingly, in most experiments the three methods produced 
-        <strong>nearly identical accuracy</strong>, often matching to 
-        <strong>three decimal places</strong>. Changing sample size did not 
-        meaningfully affect this similarity.
-      </p>
+    <h2><strong>Findings</strong></h2>
 
-      <p>
-        However, when I adjusted parameters like <code>min_samples_leaf</code> and 
-        <code>max_depth</code>, differences began to emerge. Under these conditions, 
-        <strong>weighted voting consistently outperformed</strong> majority and 
-        ranked voting. Both majority voting and ranked voting declined in similar 
-        ways as the trees became more restricted.
-      </p>
+    <p>
+    Surprisingly, in most experiments the three methods produced <strong>nearly identical accuracy</strong>, 
+    often matching to <strong>three decimal places</strong>. Changing sample size did not meaningfully 
+    affect this similarity.
+    </p>
 
-      <p>
-        This result helps explain why 
-        <strong>scikit-learn’s RandomForestClassifier uses weighted aggregation 
-        internally</strong>: it tends to be the most statistically reliable method, 
-        especially when tree structures are constrained.
-      </p>
+    <p>
+    However, when I adjusted parameters like <code>min_samples_leaf</code> and <code>max_depth</code>, 
+    differences began to emerge. Under these conditions, <strong>weighted voting consistently 
+    outperformed</strong> majority and ranked voting. Both majority voting and ranked voting declined 
+    in similar ways as the trees became more restricted.
+    </p>
 
-      <h2>Regression</h2>
+    <p>
+    This result helps explain why <strong>scikit-learn's RandomForestClassifier uses weighted aggregation 
+    internally</strong>: it tends to be the most statistically reliable method, especially when tree 
+    structures are constrained.
+    </p>
 
-      <p>
-        Random Forest <strong>regression</strong> is different. Each leaf node 
-        returns the <strong>mean</strong> of the target values in that leaf. The 
-        forest prediction is simply the <strong>mean of the tree means</strong>.
-      </p>
+    <h2><strong>Regression</strong></h2>
 
-      <p>
-        Because the mean is a linear operator, any alternative aggregation (e.g., 
-        weighted mean, median, majority rule) is either:
-      </p>
+    <p>
+    Random Forest <strong>regression</strong> is different. Each leaf node returns the 
+    <strong>mean</strong> of the target values in that leaf. The forest prediction is simply the 
+    <strong>mean of the tree means</strong>.
+    </p>
 
-      <ul>
-        <li><strong>mathematically equivalent</strong> under standard assumptions, or</li>
-        <li><strong>statistically inferior</strong> (e.g., more biased or higher variance)</li>
-      </ul>
+    <p>
+    Because the mean is a linear operator, any alternative aggregation (e.g., weighted mean, median, 
+    majority rule) is either:
+    </p>
 
-      <p>
-        Thus, unlike classification, regression does not benefit from alternative 
-        aggregation strategies.
-      </p>
-    </main>
+    <ul>
+      <li><strong>mathematically equivalent</strong> under standard assumptions, or</li>
+      <li><strong>statistically inferior</strong> (more biased or higher variance)</li>
+    </ul>
+
+    <p>
+    Thus, unlike classification, regression does not benefit from alternative aggregation strategies.
+    </p>
+
+</main>
 
     <footer>
       <small><span id="year"></span> Linear Regression</small>

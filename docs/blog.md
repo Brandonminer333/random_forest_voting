@@ -1,7 +1,3 @@
-Below is a polished, clearer, more technically accurate, and more readable revision of your blog post. I kept your structure and intent, but improved flow, fixed errors, clarified concepts, and strengthened your explanations.
-
----
-
 # **A Case Study on the Impacts of Random Forest Prediction Aggregation**
 
 ### **Brandon Miner**
@@ -9,9 +5,9 @@ Below is a polished, clearer, more technically accurate, and more readable revis
 ## **Introduction**
 
 This discussion focuses on the machine-learning model known as a **Random Forest**, an ensemble technique built from many **decision trees**.
-A decision tree is a model that recursively splits the data using a greedy algorithm to form increasingly homogeneous subsets. While decision trees are intuitive and powerful, they tend to **overfit**—they perfectly memorize the training data but generalize poorly.
+A decision tree is a model that recursively splits the data using a greedy algorithm to form increasingly homogeneous subsets. While decision trees are intuitive and powerful, they tend to **overfit**. This means that they generalize poorly.
 
-Random Forests address this weakness through **ensembling**: they build many decorrelated, shallowly constrained trees (via feature subsampling, bootstrapping, and depth/leaf restrictions). Each individual tree may still overfit, but **aggregating** their predictions reduces variance and improves stability—essentially “averaging away” the overfitting.
+Random Forests address this weakness through **ensembling**: they build many decorrelated, shallowly constrained trees (via feature subsampling, bootstrapping, and depth/leaf restrictions). Each individual tree may still overfit, but **aggregating** their predictions reduces variance and improves stability. You can think of it as essentially “averaging away” the overfitting.
 
 But that raises the central question of this post:
 
@@ -40,9 +36,9 @@ It is simple, fast, and fully parallelizable. However, it ignores the **confiden
 
 Consider three trees and two classes, (A) and (B).
 
-* Tree 1: Leaf contains 4 samples → 3 are class (A)
-* Tree 2: Leaf contains 4 samples → 3 are class (A)
-* Tree 3: Leaf contains 10 samples → all 10 are class (B)
+* Tree 1: Leaf contains 4 samples $\to$ 3 are class (A)
+* Tree 2: Leaf contains 4 samples $\to$ 3 are class (A)
+* Tree 3: Leaf contains 10 samples $\to$ all 10 are class (B)
 
 Majority voting elects class **A**, because two trees predict (A).
 But weighted voting notes that Tree 3 has a stronger signal—its leaf has more samples, and those samples unanimously support (B).
@@ -57,9 +53,9 @@ This custom method becomes interesting with **three or more classes**.
 
 Example: classes (A), (B), and (C); 100 total trees:
 
-* 45 trees → (A)
-* 35 trees → (B)
-* 20 trees → (C)
+* 45 trees $\to$ (A)
+* 35 trees $\to$ (B)
+* 20 trees $\to$ (C)
 
 The 20 votes for (C) are nowhere close to winning, but they contain information. In ranked voting, we look at the **second-choice class** for each tree predicting (C). If they overwhelmingly favor (B), then (B) may actually be preferred in a two-class comparison.
 
